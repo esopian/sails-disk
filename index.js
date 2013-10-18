@@ -7,6 +7,7 @@
 
 var _ = require('lodash');
 var fs = require('fs-extra');
+var uuid = require('node-uuid');
 
 module.exports = (function () {
 
@@ -29,13 +30,15 @@ module.exports = (function () {
 
 		// Allow a schemaless datastore
 		defaults: {
-			schema: false
+			schema: false,
+			uuid: false
 		},
 
 		// File path for disk file output
 		filePath: '.tmp/disk.db',
 
 		registerCollection: function (collection, cb) {
+			if(collection.config.uuid) this.defaults.uuid = true;
 
 			// Save reference to collection so we have it
 			collection[collection.identity] = collection;
@@ -243,7 +246,6 @@ module.exports = (function () {
 		},
 
 		create: function (collectionName, values, cb) {
-
 			for (var attrName in schema[collectionName]) {
 
 				var attrDef = schema[collectionName][attrName];
@@ -276,6 +278,10 @@ module.exports = (function () {
 					values[attrName] = counters[collectionName][attrName];
 
 				}
+			}
+
+			if(this.defaults.uuid && !values.id) {
+				values.id = uuid.v4();
 			}
 
 			data[collectionName].push(values);
